@@ -1,0 +1,14 @@
+para esta aplicacion de authorization
+es basicamente crear usuarios y permitirles el acceso a la aplicacion
+utiliza varias librerias 
+
+const express = require('express')
+const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const expressJwt = require('express-jwt')
+
+npm i -S express
+tomar ese ejemplo que es la libreria para usar la conexión hacia mongo
+de todas maneras las dependencias se pueden ver en el 
+archivo package.json
