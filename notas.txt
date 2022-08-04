@@ -12,3 +12,25 @@ npm i -S express
 tomar ese ejemplo que es la libreria para usar la conexión hacia mongo
 de todas maneras las dependencias se pueden ver en el 
 archivo package.json
+
+
+asi es como el middle ware se crea al principio 
+
+app.get('/lele', (req, res, next) =>{
+    req.user = { id: 'lele'}
+    next()
+}, (req,res,next) => {
+    console.log('lala', req.user)
+    res.send('ok')
+})
+
+posteriormente se cambia tomando en cuenta el middleware 
+
+const validateJwt = expressJwt({ secret: 'mi-string-secreto', algorithms: ['HS256']})
+
+y termina de esta maneras
+
+app.get('/lele',validateJwt, (req, res, next) =>{
+    console.log('lala', req.user)
+    res.send('ok')
+})

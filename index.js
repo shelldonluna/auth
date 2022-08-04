@@ -1,8 +1,8 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const expressJwt = require('express-jwt')
+const jsonwebtoken = require('jsonwebtoken')
+const {expressjwt: jwt} = require('express-jwt')
 const User = require('./user')
 
 mongoose.connect('mongodb+srv://shelldon:sh311d0n@cluster0.y8jgm49.mongodb.net/auth?retryWrites=true&w=majority')
@@ -10,7 +10,10 @@ mongoose.connect('mongodb+srv://shelldon:sh311d0n@cluster0.y8jgm49.mongodb.net/a
 const app = express()
 app.use(express.json())
 
-const signToken = _id => jwt.sign({ _id }, 'mi-string-secreto')
+const validateJwt = jwt({ secret: 'mi-string-secreto', algorithms: ['HS256']})
+// esta es la funcion que firma el  jsonwebtoken, la cual se utiliza 
+//para firmar el id y que lo muestre encriptado
+const signToken = _id => jsonwebtoken.sign({ _id }, 'mi-string-secreto')
 //se crea la función post la cual  utiliza un try catch en el caso
 //que ya exista el usuario, manda un mensaje de errir 500 en caso de que falle
 app.post('/register', async (req,res) => {
@@ -56,6 +59,11 @@ app.post('/login', async (req,res) => {
     } catch(err) {
         res.status(500).send(err.message)
     }
+})
+
+app.get('/lele',validateJwt, (req, res, next) =>{
+    console.log('lala', req.auth)
+    res.send('ok')
 })
 app.listen(3000, () => {
     console.log ('Listening por 3000')
