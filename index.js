@@ -10,7 +10,7 @@ mongoose.connect('mongodb+srv://shelldon:sh311d0n@cluster0.y8jgm49.mongodb.net/a
 const app = express()
 app.use(express.json())
 
-
+const signToken = _id => jwt.sign({ _id }, 'mi-string-secreto')
 //se crea la función post la cual  utiliza un try catch en el caso
 //que ya exista el usuario, manda un mensaje de errir 500 en caso de que falle
 app.post('/register', async (req,res) => {
@@ -26,8 +26,10 @@ app.post('/register', async (req,res) => {
         const salt  = await bcrypt.genSalt()
         const hashed = await bcrypt.hash(body.password, salt)
         const user = await User.create ({email: body.email, password:hashed, salt})
+        //aqui se encripta el id del usuario para que no venga en claro 
+        const signed = signToken(user._id)
 
-        res.send({ _id: user._id })
+        res.status(201.).send(signed)
 
     } catch (err) {
         console.log(err) 
@@ -35,7 +37,21 @@ app.post('/register', async (req,res) => {
         
     }
 })
-
+//endpoint de inicio de sesion 
+app.post('/login', async (req,res) => {
+    const { body } = req
+    try {
+        const user = await User.findOne({ email: body.email })
+    } else {
+        const isMatch = await bcrypt.compare(body.password, user.password)
+        if (isMatch) {
+            const signed = signToken(user._id)
+            res.status(200).send(signed)
+        }else {
+            res.status(403).send('Usuario y/o contrasenia invalida')
+        }
+    }
+})
 app.listen(3000, () => {
     console.log ('Listening por 3000')
 })
