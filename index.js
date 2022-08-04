@@ -42,14 +42,19 @@ app.post('/login', async (req,res) => {
     const { body } = req
     try {
         const user = await User.findOne({ email: body.email })
-    } else {
-        const isMatch = await bcrypt.compare(body.password, user.password)
-        if (isMatch) {
-            const signed = signToken(user._id)
-            res.status(200).send(signed)
+        if(!user) {
+            res.status(403).send('usuario y/o constrasenia invalida')
         }else {
-            res.status(403).send('Usuario y/o contrasenia invalida')
+            const isMatch = await bcrypt.compare(body.password, user.password)
+            if (isMatch) {
+                const signed = signToken(user._id)
+                res.status(200).send(signed)
+            }else {
+                res.status(403).send('Usuario y/o contrasenia invalida')
+            }
         }
+    } catch(err) {
+        res.status(500).send(err.message)
     }
 })
 app.listen(3000, () => {
