@@ -15,6 +15,11 @@ archivo package.json
 
 
 asi es como el middle ware se crea al principio 
+la primera funcion asigna a la variable req.user el objeto { id: 'lele'}
+y manda ejecutar la siguiente funcion con next()
+la siguiente funcion manda un console log con 'lala' y el valor de req.user
+{ id: 'lele' }
+y la respuesta del endpoint  ok 
 
 app.get('/lele', (req, res, next) =>{
     req.user = { id: 'lele'}
@@ -24,13 +29,40 @@ app.get('/lele', (req, res, next) =>{
     res.send('ok')
 })
 
-posteriormente se cambia tomando en cuenta el middleware 
+posteriormente se cambia tomando en cuenta el middleware expressJwt
 
+aqui se declara la funcion validateJwt 
 const validateJwt = expressJwt({ secret: 'mi-string-secreto', algorithms: ['HS256']})
 
-y termina de esta maneras
+la cual basicamente reemplaza la funcion
+(req, res, next) =>{
+    req.user = { id: 'lele'}
+    next()
+},
+y termina de esta manera
 
 app.get('/lele',validateJwt, (req, res, next) =>{
-    console.log('lala', req.user)
+    console.log('lala', req.auth)
     res.send('ok')
 })
+
+
+aqui podemos ver que el req.auth cambio en lugar de req.user, esto es porque 
+el middleware cambio de version 
+
+
+app.get ('/lele',  validateJwt, async (req,res,next ) => {
+    try {
+        const user = await User.findById(req.auth._id)
+        if (!user) {
+            return res.status(401).end()
+        }
+        req.auth = user
+        next()
+    } catch (e) {
+        next(e)
+    }
+}, (req,res) => {
+    res.send(req.auth)
+}
+ )

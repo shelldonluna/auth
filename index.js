@@ -10,10 +10,11 @@ mongoose.connect('mongodb+srv://shelldon:sh311d0n@cluster0.y8jgm49.mongodb.net/a
 const app = express()
 app.use(express.json())
 
-const validateJwt = jwt({ secret: 'mi-string-secreto', algorithms: ['HS256']})
+console.log(process.env.SECRET)
+const validateJwt = jwt({ secret: process.env.SECRET, algorithms: ['HS256']})
 // esta es la funcion que firma el  jsonwebtoken, la cual se utiliza 
 //para firmar el id y que lo muestre encriptado
-const signToken = _id => jsonwebtoken.sign({ _id }, 'mi-string-secreto')
+const signToken = _id => jsonwebtoken.sign({ _id }, process.env.SECRET)
 //se crea la función post la cual  utiliza un try catch en el caso
 //que ya exista el usuario, manda un mensaje de errir 500 en caso de que falle
 app.post('/register', async (req,res) => {
@@ -46,14 +47,14 @@ app.post('/login', async (req,res) => {
     try {
         const user = await User.findOne({ email: body.email })
         if(!user) {
-            res.status(403).send('usuario y/o constrasenia invalida')
+            res.status(403).send('usuario   invalida')
         }else {
             const isMatch = await bcrypt.compare(body.password, user.password)
             if (isMatch) {
                 const signed = signToken(user._id)
                 res.status(200).send(signed)
             }else {
-                res.status(403).send('Usuario y/o contrasenia invalida')
+                res.status(403).send('contrasenia invalida')
             }
         }
     } catch(err) {
@@ -61,10 +62,35 @@ app.post('/login', async (req,res) => {
     }
 })
 
-app.get('/lele',validateJwt, (req, res, next) =>{
-    console.log('lala', req.auth)
-    res.send('ok')
+//Middleware de authorization 
+const findAndAssignUser = async (req,res,next) => {
+    try {
+        const user = await User.findById(req.auth._id)
+        if (!user) {
+            return res.status(401).end()
+        }
+        req.auth = user
+        next()
+    } catch (e) {
+        next(e)
+    }
+}
+
+const isAuthenticated = express.Router().use(validateJwt, findAndAssignUser)
+app.get('/lele',isAuthenticated, (req, res) =>{
+    //res.send(req.auth)
+    throw new Error('nuevo error')
 })
+app.use((err,req,res,next) => {
+    console.error('Mi nuevo error :(', err.stack)
+    next(err)
+})
+app.use ((err,req,res, next) => {
+    res.send('Ha ocurrido un error :(')
+})
+
+
+
 app.listen(3000, () => {
     console.log ('Listening por 3000')
 })
